@@ -1,34 +1,43 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getProductDetail, updateProduct } from "../../api/productApi";
 
-const ProductEdit = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { register, handleSubmit, reset } = useForm();
+const ProductEdit = ({ productId, onClose, onSuccess }) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTodo = async () => {
+    const fetchProduct = async () => {
       try {
-        const todo = await getProductDetail(id);
-        reset(todo);
+        const product = await getProductDetail(productId);
+        reset(product);
         setLoading(false);
       } catch (error) {
-        toast.error("Lỗi khi tải dữ liệu!");
+        toast.error("Lỗi khi tải dữ liệu sản phẩm!");
         console.error(error);
       }
     };
-    fetchTodo();
-  }, [id, reset]);
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId, reset]);
 
   const onSubmit = async (data) => {
     try {
-      await updateProduct(id, data);
-      toast.success("Cập nhật thành công!");
-      navigate("/admin/product");
+      await updateProduct(productId, {
+        ...data,
+        price: parseFloat(data.price),
+        countInStock: parseInt(data.countInStock),
+      });
+      toast.success("Cập nhật sản phẩm thành công!");
+      onSuccess && onSuccess();
+      onClose && onClose();
     } catch (error) {
       toast.error("Cập nhật thất bại!");
       console.error(error);
@@ -39,42 +48,79 @@ const ProductEdit = () => {
 
   return (
     <div className="container mt-5">
-      <Link to="/admin/product" className="btn btn-primary">
-        Trở lại
-      </Link>
-      <h2 className="text-center">Sửa Todo</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-3">
-          <label>Tiêu đề</label>
+          <label className="form-label">Tên sản phẩm</label>
           <input
             type="text"
             className="form-control"
-            {...register("title", { required: true })}
+            {...register("name", { required: true })}
+            placeholder="Nhập tên sản phẩm..."
           />
+          {errors.name && (
+            <span className="text-danger">Tên không được bỏ trống.</span>
+          )}
         </div>
+
         <div className="mb-3">
-          <label>Mô tả</label>
-          <textarea className="form-control" {...register("description")} />
-        </div>
-        <div className="mb-3">
-          <label>Ưu tiên</label>
-          <select className="form-select" {...register("priority")}>
-            <option value="low">Thấp</option>
-            <option value="medium">Trung bình</option>
-            <option value="high">Cao</option>
-          </select>
-        </div>
-        <div className="form-check mb-3">
+          <label className="form-label">Ảnh (URL)</label>
           <input
-            type="checkbox"
-            className="form-check-input"
-            {...register("completed")}
+            type="text"
+            className="form-control"
+            {...register("image", { required: true })}
+            placeholder="Nhập URL ảnh sản phẩm..."
           />
-          <label className="form-check-label">Đã hoàn thành</label>
+          {errors.image && (
+            <span className="text-danger">Ảnh không được bỏ trống.</span>
+          )}
         </div>
-        <button type="submit" className="btn btn-primary">
-          Lưu
-        </button>
+
+        <div className="mb-3">
+          <label className="form-label">Giá (VNĐ)</label>
+          <input
+            type="number"
+            className="form-control"
+            {...register("price", {
+              required: true,
+              min: { value: 0, message: "Giá phải lớn hơn 0" },
+            })}
+            placeholder="Nhập giá sản phẩm..."
+          />
+          {errors.price && (
+            <span className="text-danger">
+              {errors.price.message || "Giá không được bỏ trống."}
+            </span>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Mô tả</label>
+          <textarea
+            className="form-control"
+            rows="3"
+            {...register("description", { required: true })}
+            placeholder="Nhập mô tả sản phẩm..."
+          ></textarea>
+          {errors.description && (
+            <span className="text-danger">Mô tả không được bỏ trống.</span>
+          )}
+        </div>
+
+        <div className="text-center">
+          <button
+            type="submit"
+            className="btn btn-primary px-4 me-2 rounded-pill"
+          >
+            Lưu thay đổi
+          </button>
+          {/* <button
+            type="button"
+            className="btn btn-secondary  px-4 rounded-pill"
+            onClick={onClose}
+          >
+            Huỷ
+          </button> */}
+        </div>
       </form>
     </div>
   );

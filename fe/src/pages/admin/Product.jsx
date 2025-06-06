@@ -6,54 +6,70 @@ import {
   getAllProduct,
   updateProduct,
 } from "../../api/productApi";
+import { Button, Modal } from "antd";
+import ProductAdd from "./ProductAdd";
+import ProductEdit from "./ProductEdit";
 
 const Product = () => {
-  const [todos, setTodos] = useState([]);
+  const [products, setProducts] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [order, setOrder] = useState("asc");
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const limit = 5;
 
-  const fetchTodos = async () => {
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+
+  // Fetch products
+  const fetchProducts = async () => {
+    setLoading(true);
     try {
       const res = await getAllProduct({
         keyword,
-        priority: priorityFilter,
+        category: categoryFilter,
         sortBy,
         order,
         page,
         limit,
       });
-      setTodos(res.data);
+      setProducts(res.data || []);
     } catch (err) {
-      toast.error("Không thể tải danh sách todo.");
+      toast.error("Không thể tải danh sách sản phẩm.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTodos();
-  }, [keyword, priorityFilter, sortBy, order, page]);
+    fetchProducts();
+  }, [keyword, categoryFilter, sortBy, order, page]);
 
   const handleDelete = async (id) => {
-    if (confirm("Bạn có chắc muốn xóa todo này?")) {
-      await deleteProduct(id);
-      toast.success("Đã xoá todo thành công");
-      fetchTodos();
+    console.log(id);
+    if (confirm("Bạn có chắc muốn xoá sản phẩm này?")) {
+      try {
+        await deleteProduct(id);
+        toast.success("Đã xoá sản phẩm thành công");
+        fetchProducts();
+      } catch (err) {
+        toast.error("Không thể xoá sản phẩm.");
+      }
     }
   };
 
-  const handleToggleComplete = async (todo) => {
+  const handleToggleStatus = async (product) => {
     try {
-      await updateProduct(todo.id, {
-        title: todo.title,
-        priority: todo.priority,
-        completed: !todo.completed,
+      await updateProduct(product.id, {
+        ...product,
+        status: product.status === "available" ? "out_of_stock" : "available",
       });
-
       toast.success("Cập nhật trạng thái thành công!");
-      fetchTodos();
+      fetchProducts();
     } catch (err) {
       toast.error("Có lỗi xảy ra khi cập nhật trạng thái.");
     }
@@ -61,29 +77,41 @@ const Product = () => {
 
   return (
     <div className="container mt-5">
-      <Link to="add" className="btn btn-primary">
-        Thêm mới Todo
-      </Link>
-      <h2 className="text-center">Danh sách Todo</h2>
+      <Button type="primary" onClick={() => setIsAddModalOpen(true)}>
+        Thêm mới sản phẩm
+      </Button>
+      <Modal
+        title="Thêm sản phẩm"
+        open={isAddModalOpen}
+        onCancel={() => setIsAddModalOpen(false)}
+        footer={null}
+      >
+        <ProductAdd
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={fetchProducts}
+        />
+      </Modal>
+
+      <h2 className="text-center mt-3">Danh sách sản phẩm</h2>
 
       <div className="row mb-3">
         <div className="col-md-4">
           <input
             type="text"
             className="form-control"
-            placeholder="Tìm theo tiêu đề..."
+            placeholder="Tìm theo tên sản phẩm..."
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
         <div className="col-md-3">
           <select
             className="form-select"
-            onChange={(e) => setPriorityFilter(e.target.value)}
+            onChange={(e) => setCategoryFilter(e.target.value)}
           >
-            <option value="">-- Lọc theo độ ưu tiên --</option>
-            <option value="low">Thấp</option>
-            <option value="medium">Trung bình</option>
-            <option value="high">Cao</option>
+            <option value="">-- Lọc theo danh mục --</option>
+            <option value="shirt">Áo</option>
+            <option value="shoes">Giày</option>
+            <option value="accessory">Phụ kiện</option>
           </select>
         </div>
         <div className="col-md-3">
@@ -96,12 +124,12 @@ const Product = () => {
             }}
           >
             <option value="">-- Sắp xếp --</option>
-            <option value="title-asc">Tiêu đề A-Z</option>
-            <option value="title-desc">Tiêu đề Z-A</option>
+            <option value="name-asc">Tên A-Z</option>
+            <option value="name-desc">Tên Z-A</option>
+            <option value="price-asc">Giá thấp → cao</option>
+            <option value="price-desc">Giá cao → thấp</option>
             <option value="createdAt-desc">Mới nhất</option>
             <option value="createdAt-asc">Cũ nhất</option>
-            <option value="priority-asc">Ưu tiên thấp → cao</option>
-            <option value="priority-desc">Ưu tiên cao → thấp</option>
           </select>
         </div>
       </div>
@@ -109,47 +137,62 @@ const Product = () => {
       <table className="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>Tiêu đề</th>
-            <th>Ưu tiên</th>
+            <th>Tên sản phẩm</th>
+            <th>Giá</th>
             <th>Trạng thái</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {todos.length > 0 ? (
-            todos.map((todo) => (
-              <tr key={todo.id}>
-                <td>{todo.title}</td>
-                <td>{todo.priority}</td>
+          {loading ? (
+            <tr>
+              <td colSpan="5" className="text-center">
+                Đang tải dữ liệu...
+              </td>
+            </tr>
+          ) : products.length > 0 ? (
+            products.map((item) => (
+              <tr key={item.id}>
+                <td>{item.name}</td>
                 <td>
-                  {todo.completed ? (
-                    <span className="text-success">Đã hoàn thành</span>
+                  {typeof item.price === "number"
+                    ? item.price.toLocaleString() + " VNĐ"
+                    : "Đang cập nhật"}
+                </td>
+
+                <td>
+                  {item.status === "available" ? (
+                    <span className="text-success">Còn hàng</span>
                   ) : (
-                    <span className="text-warning">Chưa hoàn thành</span>
+                    <span className="text-danger">Hết hàng</span>
                   )}
                 </td>
                 <td>
                   <button
-                    className="btn btn-sm btn-info me-1"
-                    onClick={() => handleToggleComplete(todo)}
+                    className="btn btn-sm btn-warning me-1"
+                    onClick={() => handleToggleStatus(item)}
                   >
                     Đổi trạng thái
                   </button>
                   <Link
-                    to={`${todo.id}`}
+                    to={`${item._id}`}
                     className="btn btn-sm btn-secondary me-1"
                   >
                     Chi tiết
                   </Link>
-                  <Link
-                    to={`edit/${todo.id}`}
-                    className="btn btn-sm btn-primary me-1"
+                  <Button
+                    type="primary"
+                    className="me-1"
+                    onClick={() => {
+                      setSelectedProductId(item._id);
+                      setIsEditModalOpen(true);
+                    }}
                   >
                     Sửa
-                  </Link>
+                  </Button>
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(todo.id)}
+                    onClick={() => handleDelete(item._id)}
                   >
                     Xoá
                   </button>
@@ -158,8 +201,8 @@ const Product = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="4" className="text-center">
-                Không có todo nào.
+              <td colSpan="5" className="text-center">
+                Không có sản phẩm nào.
               </td>
             </tr>
           )}
@@ -181,6 +224,28 @@ const Product = () => {
           Trang sau
         </button>
       </div>
+
+      <Modal
+        title="Chỉnh sửa sản phẩm"
+        open={isEditModalOpen}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+          setSelectedProductId(null);
+        }}
+        footer={null}
+      >
+        {selectedProductId && (
+          <ProductEdit
+            // productId={product._id}
+            productId={selectedProductId}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setSelectedProductId(null);
+            }}
+            onSuccess={fetchProducts}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

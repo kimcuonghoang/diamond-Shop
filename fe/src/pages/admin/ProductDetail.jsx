@@ -4,38 +4,67 @@ import { getProductDetail } from "../../api/productApi";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [todo, setTodo] = useState(null);
+  const [product, setProduct] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getProductDetail(id);
-      setTodo(res);
+      try {
+        const res = await getProductDetail(id);
+        setProduct(res);
+      } catch (err) {
+        console.error("Không thể tải chi tiết sản phẩm", err);
+      }
     };
     fetchData();
   }, [id]);
 
-  if (!todo) return <div className="text-center">Loading ...</div>;
+  if (!product) return <div className="text-center">Đang tải...</div>;
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center">Chi tiết Todo</h2>
-      <p>
-        <strong>Tiêu đề:</strong> {todo.title}
-      </p>
-      <p>
-        <strong>Mô tả:</strong> {todo.description}
-      </p>
-      <p>
-        <strong>Ưu tiên:</strong> {todo.priority}
-      </p>
-      <p>
-        <strong>Trạng thái:</strong>{" "}
-        {todo.completed ? "Hoàn thành" : "Chưa hoàn thành"}
-      </p>
+      <h2 className="text-center mb-4">Chi tiết sản phẩm</h2>
 
-      <Link to="/admin/product" className="btn btn-secondary">
-        Quay lại
-      </Link>
+      <div className="row">
+        <div className="col-md-5">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="img-fluid rounded border"
+          />
+        </div>
+        <div className="col-md-7">
+          <p>
+            <strong>Tên sản phẩm:</strong> {product.name}
+          </p>
+          <p>
+            <strong>Mô tả:</strong> {product.description}
+          </p>
+          <p>
+            <strong>Giá:</strong>{" "}
+            {product.price?.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            })}
+          </p>
+          <p>
+            <strong>Danh mục:</strong> {product.category || "Chưa phân loại"}
+          </p>
+          <p>
+            <strong>Trạng thái:</strong>{" "}
+            {product.countInStock > 0 ? (
+              <span className="text-success">Còn hàng</span>
+            ) : (
+              <span className="text-danger">Hết hàng</span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 text-center">
+        <Link to="/admin/product" className="btn btn-secondary">
+          Quay lại danh sách
+        </Link>
+      </div>
     </div>
   );
 };
