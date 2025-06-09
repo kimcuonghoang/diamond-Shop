@@ -4,7 +4,7 @@ import ServicesShop from "../../components/ServicesShop";
 import { getAllProduct } from "../../api/productApi";
 import FiltersProduct from "../../components/FiltersProduct";
 import { MdNavigateNext } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const colors = [
   { name: "Red", hex: "#f87171" },
@@ -20,21 +20,22 @@ const Shop = () => {
     const fetchProduct = async () => {
       try {
         const res = await getAllProduct();
-        setProducts(res.data);
+        setProducts(res.data.data);
       } catch (error) {
         console.log(error);
       }
     };
     fetchProduct();
   }, []);
+
   return (
     <>
       <div className="text-center py-20">
         <h2 className="font-bold text-4xl mb-3 ">Fashion</h2>
         <div className="flex gap-3 items-center justify-center">
-          <p>Home</p>
+          <Link to="/">Home</Link>
           <MdNavigateNext />
-          <p>Shop</p>
+          <Link to="/shop">Shop</Link>
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 py-6">

@@ -5,7 +5,6 @@ import CartModal from "./CartModal";
 import { useContext, useState } from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { CartContext } from "../contexts/CartContext";
-
 export default function Header() {
   const { state } = useContext(CartContext);
   const [visible, setVisible] = useState(false);

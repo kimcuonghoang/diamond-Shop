@@ -15,7 +15,7 @@ export default function Products() {
       try {
         const res = await getProductById(id);
 
-        setProduct(res.data);
+        setProduct(res.data.data);
         setSelectedImage(res?.image || "");
       } catch (error) {
         console.log(error);
@@ -144,6 +144,7 @@ export default function Products() {
                   -
                 </button>
                 <span className="text-lg">{quantity}</span>
+
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
                   className="w-8 h-8 border rounded text-lg"

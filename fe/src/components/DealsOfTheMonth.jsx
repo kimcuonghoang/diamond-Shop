@@ -10,11 +10,11 @@ import image1 from "../assets/imgs/deals/image1.png";
 import image2 from "../assets/imgs/deals/image2.png";
 
 const DealsOfTheMonth = () => {
-  // ✅ Cài đặt đếm ngược tới 3 ngày sau
+  // Cài đặt đếm ngược tới 3 ngày sau
   const calculateTimeLeft = () => {
     const now = new Date();
     const targetDate = new Date();
-    targetDate.setDate(now.getDate() + 3); // ví dụ: 3 ngày sau
+    targetDate.setDate(now.getDate() + 3); // 3 ngày sau
     const difference = targetDate - now;
 
     const timeLeft = {

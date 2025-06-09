@@ -12,6 +12,7 @@ import iconGoogle from "../../assets/imgs/iconGoogle.png";
 import iconEmail from "../../assets/imgs/iconEmail.png";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ScrollToTop from "../../components/ScrollToTop";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -39,11 +40,11 @@ const Login = () => {
       toast.error(error.response.data || "Login failed!");
       reset();
     }
-    
   };
 
   return (
     <>
+      <ScrollToTop />
       <Header />
       <div className=" m-16  ">
         <div className="grid grid-cols-2 border-solid border-2 border-gray-300">
@@ -52,7 +53,9 @@ const Login = () => {
           </div>
           <div className="p-5">
             <h1 className="text-6xl pb-16 font-semibold">CodeFarm</h1>
-            <h3 className="text-3xl font-medium mb-7">Sign In To CodeFarm</h3>
+            <h3 className="text-3xl font-medium mb-7">
+              Sign In To <span className="font-semibold">CodeFarm</span>
+            </h3>
             <div className="flex gap-16 mb-20">
               <button
                 type="button"

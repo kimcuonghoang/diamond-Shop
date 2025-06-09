@@ -3,13 +3,13 @@ import { Link, Outlet } from "react-router-dom";
 
 import {
   DesktopOutlined,
-  FileOutlined,
   PieChartOutlined,
   RollbackOutlined,
-  TeamOutlined,
+  UnorderedListOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Breadcrumb, Layout, Menu, theme } from "antd";
+import ScrollToTop from "../components/ScrollToTop";
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
@@ -42,11 +42,14 @@ const items = [
       <UserOutlined />{" "}
     </Link>
   ),
-  getItem("Team", "sub2", <TeamOutlined />, [
-    getItem("Team 1", "6"),
-    getItem("Team 2", "8"),
-  ]),
-  getItem("Files", "9", <FileOutlined />),
+  getItem(
+    "Category",
+    "sub2 ",
+    <Link to="/admin/categories">
+      <UnorderedListOutlined />{" "}
+    </Link>
+  ),
+
   getItem(
     "Back to Home",
     "10",
@@ -62,6 +65,7 @@ const AdminLayout = () => {
   } = theme.useToken();
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <ScrollToTop />
       <Sider
         collapsible
         collapsed={collapsed}

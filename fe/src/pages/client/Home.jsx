@@ -19,7 +19,7 @@ const Home = () => {
     const fetchProduct = async () => {
       try {
         const res = await getAllProduct();
-        setProducts(res.data);
+        setProducts(res.data.data);
       } catch (error) {
         console.log(error);
         toast.error("Lỗi lấy sản phẩm!");
@@ -87,7 +87,7 @@ const Home = () => {
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105 py-2 px-3 rounded-md"
+                  className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105 "
                 />
               </div>
 

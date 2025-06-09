@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  deleteProduct,
-  getAllProduct,
-  updateProduct,
-} from "../../api/productApi";
-import { Button, Modal } from "antd";
-import ProductAdd from "./ProductAdd";
-import ProductEdit from "./ProductEdit";
 
-const Product = () => {
+import { Button, Modal } from "antd";
+import CategoryAdd from "./CategoryAdd";
+import CategoryEdit from "./CategoryEdit";
+import {
+  getAllCategory,
+  deleteCategory,
+  updateCategory,
+} from "../../api/categoryApi";
+
+const Category = () => {
   const [products, setProducts] = useState([]);
-  const [keyword, setKeyword] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [sortBy, setSortBy] = useState("");
-  const [order, setOrder] = useState("asc");
+
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const limit = 5;
@@ -29,17 +27,10 @@ const Product = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await getAllProduct({
-        keyword,
-        category: categoryFilter,
-        sortBy,
-        order,
-        page,
-        limit,
-      });
+      const res = await getAllCategory();
       setProducts(res.data.data || []);
     } catch (err) {
-      toast.error("Không thể tải danh sách sản phẩm.");
+      toast.error("Không thể tải danh sách category.");
     } finally {
       setLoading(false);
     }
@@ -47,24 +38,24 @@ const Product = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [keyword, categoryFilter, sortBy, order, page]);
+  }, []);
 
   const handleDelete = async (id) => {
     console.log(id);
-    if (confirm("Bạn có chắc muốn xoá sản phẩm này?")) {
+    if (confirm("Bạn có chắc muốn xoá category này?")) {
       try {
-        await deleteProduct(id);
-        toast.success("Đã xoá sản phẩm thành công");
+        await deleteCategory(id);
+        toast.success("Đã xoá category thành công");
         fetchProducts();
       } catch (err) {
-        toast.error("Không thể xoá sản phẩm.");
+        toast.error("Không thể xoá category.");
       }
     }
   };
 
   const handleToggleStatus = async (product) => {
     try {
-      await updateProduct(product.id, {
+      await updateCategory(product.id, {
         ...product,
         status: product.status === "available" ? "out_of_stock" : "available",
       });
@@ -78,67 +69,27 @@ const Product = () => {
   return (
     <div className="container mt-5">
       <Button type="primary" onClick={() => setIsAddModalOpen(true)}>
-        Thêm mới sản phẩm
+        Thêm mới danh mục
       </Button>
       <Modal
-        title="Thêm sản phẩm"
+        title="Thêm danh mục"
         open={isAddModalOpen}
         onCancel={() => setIsAddModalOpen(false)}
         footer={null}
       >
-        <ProductAdd
+        <CategoryAdd
           onClose={() => setIsAddModalOpen(false)}
           onSuccess={fetchProducts}
         />
       </Modal>
 
-      <h2 className="text-center mt-3">Danh sách sản phẩm</h2>
-
-      <div className="row mb-3">
-        <div className="col-md-4">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Tìm theo tên sản phẩm..."
-            onChange={(e) => setKeyword(e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="">-- Lọc theo danh mục --</option>
-            <option value="shirt">Áo</option>
-            <option value="shoes">Giày</option>
-            <option value="accessory">Phụ kiện</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            onChange={(e) => {
-              const [s, o] = e.target.value.split("-");
-              setSortBy(s);
-              setOrder(o);
-            }}
-          >
-            <option value="">-- Sắp xếp --</option>
-            <option value="name-asc">Tên A-Z</option>
-            <option value="name-desc">Tên Z-A</option>
-            <option value="price-asc">Giá thấp → cao</option>
-            <option value="price-desc">Giá cao → thấp</option>
-            <option value="createdAt-desc">Mới nhất</option>
-            <option value="createdAt-asc">Cũ nhất</option>
-          </select>
-        </div>
-      </div>
+      <h2 className="text-center mt-3">Danh sách danh mục</h2>
 
       <table className="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>Tên sản phẩm</th>
-            <th>Giá</th>
+            <th>Tên danh mục</th>
+            <th>Mô tả danh mục</th>
             <th>Trạng thái</th>
             <th>Hành động</th>
           </tr>
@@ -153,20 +104,10 @@ const Product = () => {
           ) : products.length > 0 ? (
             products.map((item) => (
               <tr key={item.id}>
-                <td>{item.name}</td>
-                <td>
-                  {typeof item.price === "number"
-                    ? item.price.toLocaleString() + " VNĐ"
-                    : "Đang cập nhật"}
-                </td>
+                <td>{item.title}</td>
 
-                <td>
-                  {item.status === "available" ? (
-                    <span className="text-success">Còn hàng</span>
-                  ) : (
-                    <span className="text-danger">Hết hàng</span>
-                  )}
-                </td>
+                <td>{item.description}</td>
+                <td>{item.status}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-warning me-1"
@@ -174,12 +115,7 @@ const Product = () => {
                   >
                     Đổi trạng thái
                   </button>
-                  <Link
-                    to={`${item._id}`}
-                    className="btn btn-sm btn-secondary me-1"
-                  >
-                    Chi tiết
-                  </Link>
+
                   <Button
                     type="primary"
                     className="me-1"
@@ -202,7 +138,7 @@ const Product = () => {
           ) : (
             <tr>
               <td colSpan="5" className="text-center">
-                Không có sản phẩm nào.
+                Không có category nào.
               </td>
             </tr>
           )}
@@ -226,7 +162,7 @@ const Product = () => {
       </div>
 
       <Modal
-        title="Chỉnh sửa sản phẩm"
+        title="Chỉnh sửa danh mục"
         open={isEditModalOpen}
         onCancel={() => {
           setIsEditModalOpen(false);
@@ -235,7 +171,7 @@ const Product = () => {
         footer={null}
       >
         {selectedProductId && (
-          <ProductEdit
+          <CategoryEdit
             // productId={product._id}
             productId={selectedProductId}
             onClose={() => {
@@ -250,4 +186,4 @@ const Product = () => {
   );
 };
 
-export default Product;
+export default Category;

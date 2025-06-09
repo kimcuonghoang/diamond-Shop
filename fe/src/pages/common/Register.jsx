@@ -10,6 +10,7 @@ import Footer from "../../components/Footer";
 import img from "../../assets/imgs/img.png";
 import iconGoogle from "../../assets/imgs/iconGoogle.png";
 import iconEmail from "../../assets/imgs/iconEmail.png";
+import ScrollToTop from "../../components/ScrollToTop";
 const Register = () => {
   const nav = useNavigate();
   const {
@@ -37,6 +38,7 @@ const Register = () => {
 
   return (
     <>
+      <ScrollToTop />
       <Header />
       <div className=" m-16  ">
         <div className="grid grid-cols-2 border-solid border-2 border-gray-300">
